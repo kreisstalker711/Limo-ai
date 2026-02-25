@@ -1,89 +1,62 @@
-/* ─── Limo AI — api/generate.js ──────────────────────── */
-/* Vercel Serverless Function (Node 18+)                 */
-
 export default async function handler(req, res) {
 
-  console.log("KEY EXISTS:", !!process.env.PIXAZO_API_KEY);
-
-  // ── Allow only POST ───────────────────────────────────
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed. Use POST." });
+    return res.status(405).json({ error: "Use POST" });
   }
 
   try {
-    // ── Parse body safely ───────────────────────────────
+
     const { prompt } = req.body || {};
 
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
-      return res.status(400).json({ error: "A valid prompt is required." });
+      return res.status(400).json({ error: "Valid prompt required" });
     }
 
     const trimmedPrompt = prompt.trim().slice(0, 500);
 
-    // ── Check API Key ───────────────────────────────────
-    const apiKey = process.env.PIXAZO_API_KEY;
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
 
     if (!apiKey) {
-      console.error("[Limo AI] Missing PIXAZO_API_KEY");
-      return res.status(500).json({ error: "Server misconfiguration." });
+      return res.status(500).json({ error: "Server configuration error" });
     }
 
-    const pixazoResponse = await fetch(
-  "https://gateway.pixazo.ai/text2image/create",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey
-    },
-    body: JSON.stringify({
-      prompt: trimmedPrompt
-    })
-  }
-);
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          inputs: trimmedPrompt
+        })
+      }
+    );
 
-    // ── Handle non-JSON responses safely ────────────────
-    let pixazoData;
-    try {
-      pixazoData = await pixazoResponse.json();
-    } catch {
-      console.error("[Limo AI] Invalid JSON from Pixazo");
-      return res.status(502).json({ error: "Invalid response from API." });
-    }
-
-    // ── Handle API errors ───────────────────────────────
-    if (!pixazoResponse.ok) {
-      console.error(
-        "[Limo AI] Pixazo error:",
-        pixazoResponse.status,
-        pixazoData
-      );
-
+    if (!response.ok) {
+      const errText = await response.text();
       return res.status(502).json({
-        error: pixazoData?.message || "Image generation failed.",
+        error: errText || "AI generation failed"
       });
     }
 
-    // ── Extract Image URL (flexible detection) ──────────
-    const imageUrl =
-      pixazoData?.url ||
-      pixazoData?.imageUrl ||
-      pixazoData?.data?.[0]?.url ||
-      pixazoData?.image_url ||
-      null;
+    const buffer = await response.arrayBuffer();
 
-    if (!imageUrl) {
-      console.error("[Limo AI] No image URL found:", pixazoData);
-      return res.status(502).json({ error: "No image returned." });
-    }
+    const base64 = Buffer.from(buffer).toString("base64");
 
-    // ── Success ─────────────────────────────────────────
-    return res.status(200).json({ imageUrl });
+    const imageUrl = `data:image/png;base64,${base64}`;
+
+    return res.status(200).json({
+      imageUrl
+    });
 
   } catch (err) {
-    console.error("[Limo AI] Network error:", err);
+
+    console.error("[Limo AI]", err);
+
     return res.status(503).json({
-      error: "Failed to connect to image service.",
+      error: "Failed to generate image"
     });
   }
 }
