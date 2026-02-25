@@ -30,17 +30,16 @@ export default async function handler(req, res) {
 
     // ── Call Pixazo API (UPDATED DOMAIN) ────────────────
     const pixazoResponse = await fetch(
-      "https://api.pixazo.ai/v1/images/generate",
+      "https://api.pixazo.ai/text2image/create",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+          "x-api-key": apiKey,
         },
         body: JSON.stringify({
-          prompt: trimmedPrompt,
-          size: "1024x1024"
-        }),
+  prompt: trimmedPrompt
+})
       }
     );
 
