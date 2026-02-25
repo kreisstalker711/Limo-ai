@@ -1,62 +1,51 @@
-export default async function handler(req, res) {
+export default async function generate(req, res) {
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Use POST" });
+    return res.status(405).json({ error: "Use POST request" });
   }
 
   try {
-
     const { prompt } = req.body || {};
 
-    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
-      return res.status(400).json({ error: "Valid prompt required" });
+    if (!prompt || typeof prompt !== "string") {
+      return res.status(400).json({ error: "Prompt required" });
     }
-
-    const trimmedPrompt = prompt.trim().slice(0, 500);
 
     const apiKey = process.env.HUGGINGFACE_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: "Server configuration error" });
+      return res.status(500).json({ error: "Missing API key" });
     }
 
-const response = await fetch(
-  "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      inputs: trimmedPrompt
-    })
-  }
-);
+    const response = await fetch(
+      "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          inputs: prompt
+        })
+      }
+    );
 
     if (!response.ok) {
-      const errText = await response.text();
-      return res.status(502).json({
-        error: errText || "AI generation failed"
-      });
+      const text = await response.text();
+      console.error("HF ERROR:", text);
+      return res.status(502).json({ error: text });
     }
 
     const buffer = await response.arrayBuffer();
-
     const base64 = Buffer.from(buffer).toString("base64");
 
-    const imageUrl = `data:image/png;base64,${base64}`;
-
     return res.status(200).json({
-      imageUrl
+      imageUrl: `data:image/png;base64,${base64}`
     });
 
   } catch (err) {
-
-    console.error("[Limo AI]", err);
-
-    return res.status(503).json({
-      error: "Failed to generate image"
-    });
+    console.error("SERVER ERROR:", err);
+    return res.status(500).json({ error: "Server crashed" });
   }
 }
