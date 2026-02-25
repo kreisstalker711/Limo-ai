@@ -20,19 +20,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Server configuration error" });
     }
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs: trimmedPrompt
-        })
-      }
-    );
+const response = await fetch(
+  "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      inputs: trimmedPrompt
+    })
+  }
+);
 
     if (!response.ok) {
       const errText = await response.text();
