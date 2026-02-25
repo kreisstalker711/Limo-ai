@@ -1,6 +1,7 @@
 /* ─── Limo AI — api/generate.js ──────────────────────── */
 /* Vercel Serverless Function                             */
 
+console.log("PIXAZO KEY:", process.env.PIXAZO_API_KEY);
 export default async function handler(req, res) {
 
   // ── Only allow POST ──────────────────────────────────
