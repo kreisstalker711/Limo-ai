@@ -28,20 +28,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Server misconfiguration." });
     }
 
-    // ── Call Pixazo API (UPDATED DOMAIN) ────────────────
     const pixazoResponse = await fetch(
-      "https://api.pixazo.ai/text2image/create",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify({
-  prompt: trimmedPrompt
-})
-      }
-    );
+  "https://gateway.pixazo.ai/text2image/create",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey
+    },
+    body: JSON.stringify({
+      prompt: trimmedPrompt
+    })
+  }
+);
 
     // ── Handle non-JSON responses safely ────────────────
     let pixazoData;
