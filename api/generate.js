@@ -28,8 +28,7 @@ export default async function handler(req, res) {
 
   // ── Call Pixazo API ───────────────────────────────────
   try {
-    const pixazoResponse = await fetch('https://api.pixazo.io/v1/images/generate', {
-      method: 'POST',
+    const pixazoResponse = await fetch('https://api.pixazo.ai/v1/images/generate', {
       headers: {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${apiKey}`,
