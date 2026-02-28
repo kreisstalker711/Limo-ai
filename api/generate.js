@@ -27,10 +27,10 @@ export default async function handler(req, res) {
 
         // If model still loading or error
         if (!hfResponse.ok) {
-            const errorText = await hfResponse.text();
-            console.error("HF Error:", errorText);
-            return res.status(500).json({ error: "Hugging Face API error" });
-        }
+    const errorText = await hfResponse.text();
+    console.error("HF RAW ERROR:", errorText);
+    return res.status(500).json({ error: errorText });
+}
 
         const arrayBuffer = await hfResponse.arrayBuffer();
 
