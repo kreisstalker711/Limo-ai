@@ -11,7 +11,7 @@ export default async function handler(req, res) {
         }
 
         const hfResponse = await fetch(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+            "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2-1",
             {
                 method: "POST",
                 headers: {
@@ -19,18 +19,17 @@ export default async function handler(req, res) {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-    inputs: prompt,
-    options: { wait_for_model: true }
-})
+                    inputs: prompt,
+                    options: { wait_for_model: true }
+                }),
             }
         );
 
-        // If model still loading or error
         if (!hfResponse.ok) {
-    const errorText = await hfResponse.text();
-    console.error("HF RAW ERROR:", errorText);
-    return res.status(500).json({ error: errorText });
-}
+            const errorText = await hfResponse.text();
+            console.error("HF RAW ERROR:", errorText);
+            return res.status(500).json({ error: errorText });
+        }
 
         const arrayBuffer = await hfResponse.arrayBuffer();
 
