@@ -29,58 +29,35 @@ retryBtn.addEventListener("click", generateImage);
 
 function generateImage() {
   const prompt = promptInput.value.trim();
-
   if (!prompt) return;
 
-  // Reset states
   errorState.hidden = true;
   imageResult.hidden = true;
   loadingState.hidden = false;
 
-  try {
-    const imageUrl =
-      `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 100000)}`;
+  const imageUrl =
+    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Date.now()}`;
 
-    // Create image preload
-    const img = new Image();
-    img.src = imageUrl;
+  resultImg.src = imageUrl;
+  resultPrompt.textContent = `"${prompt}"`;
 
-    img.onload = () => {
-      resultImg.src = imageUrl;
-      resultPrompt.textContent = `"${prompt}"`;
+  // If image loads → show result
+  resultImg.onload = () => {
+    loadingState.hidden = true;
+    imageResult.hidden = false;
+  };
 
-      loadingState.hidden = true;
-      imageResult.hidden = false;
-    };
-
-    img.onerror = () => {
-      throw new Error("Image failed to load");
-    };
-
-  } catch (err) {
+  // If image fails → show error
+  resultImg.onerror = () => {
     loadingState.hidden = true;
     errorState.hidden = false;
-  }
+  };
+
+  // Safety timeout (in case server never responds)
+  setTimeout(() => {
+    if (loadingState.hidden === false) {
+      loadingState.hidden = true;
+      errorState.hidden = false;
+    }
+  }, 8000);
 }
-
-// Download button
-downloadBtn.addEventListener("click", () => {
-  const link = document.createElement("a");
-  link.href = resultImg.src;
-  link.download = "limo-ai-image.png";
-  link.click();
-});
-
-// Fullscreen
-fullscreenBtn.addEventListener("click", () => {
-  lightboxImg.src = resultImg.src;
-  lightbox.hidden = false;
-});
-
-lightboxClose.addEventListener("click", () => {
-  lightbox.hidden = true;
-});
-
-lightboxBackdrop.addEventListener("click", () => {
-  lightbox.hidden = true;
-});
