@@ -15,10 +15,17 @@ async function generateImage() {
         const response = await fetch("/api/generate", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt }),
         });
+
+        // 🔥 IMPORTANT CHECK
+        if (!response.ok) {
+            const errorData = await response.json();
+            loadingText.innerText = "Error: " + errorData.error;
+            return;
+        }
 
         const blob = await response.blob();
         const imageUrl = URL.createObjectURL(blob);
@@ -27,7 +34,7 @@ async function generateImage() {
         loadingText.innerText = "";
 
     } catch (error) {
-        loadingText.innerText = "Error generating image!";
         console.error(error);
+        loadingText.innerText = "Something went wrong!";
     }
 }
