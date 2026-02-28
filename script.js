@@ -1,40 +1,56 @@
-async function generateImage() {
-    const prompt = document.getElementById("promptInput").value;
-    const imageElement = document.getElementById("generatedImage");
-    const loadingText = document.getElementById("loadingText");
+const generateBtn = document.getElementById("generate-btn");
+const promptInput = document.getElementById("prompt-input");
+const charNum = document.getElementById("char-num");
 
-    if (!prompt) {
-        alert("Enter a prompt!");
-        return;
+const loadingState = document.getElementById("loading-state");
+const errorState = document.getElementById("error-state");
+const imageResult = document.getElementById("image-result");
+const resultImg = document.getElementById("result-img");
+const resultPrompt = document.getElementById("result-prompt");
+const errorMessage = document.getElementById("error-message");
+
+// Character counter
+promptInput.addEventListener("input", () => {
+  charNum.textContent = promptInput.value.length;
+});
+
+generateBtn.addEventListener("click", async () => {
+  const prompt = promptInput.value.trim();
+
+  if (!prompt) return;
+
+  // Reset states
+  errorState.hidden = true;
+  imageResult.hidden = true;
+  loadingState.hidden = false;
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "API error");
     }
 
-    loadingText.innerText = "Generating...";
-    imageElement.src = "";
+    const blob = await response.blob();
+    const imageUrl = URL.createObjectURL(blob);
 
-    try {
-        const response = await fetch("/api/generate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prompt }),
-        });
+    resultImg.src = imageUrl;
+    resultPrompt.textContent = prompt;
 
-        // 🔥 IMPORTANT CHECK
-        if (!response.ok) {
-            const errorData = await response.json();
-            loadingText.innerText = "Error: " + errorData.error;
-            return;
-        }
+    loadingState.hidden = true;
+    imageResult.hidden = false;
 
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
-
-        imageElement.src = imageUrl;
-        loadingText.innerText = "";
-
-    } catch (error) {
-        console.error(error);
-        loadingText.innerText = "Something went wrong!";
-    }
-}
+  } catch (error) {
+    loadingState.hidden = true;
+    errorState.hidden = false;
+    errorMessage.textContent = error.message;
+    console.error(error);
+  }
+});
