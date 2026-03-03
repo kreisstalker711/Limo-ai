@@ -16,7 +16,6 @@ promptInput.addEventListener("input", () => {
 
 generateBtn.addEventListener("click", async () => {
   const prompt = promptInput.value.trim();
-
   if (!prompt) return;
 
   // Reset states
@@ -25,27 +24,21 @@ generateBtn.addEventListener("click", async () => {
   loadingState.hidden = false;
 
   try {
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
+    // 🔥 Direct Pollinations image URL
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
 
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "API error");
-    }
+    // Wait for image to load before showing
+    resultImg.onload = () => {
+      loadingState.hidden = true;
+      imageResult.hidden = false;
+    };
 
-    const blob = await response.blob();
-    const imageUrl = URL.createObjectURL(blob);
+    resultImg.onerror = () => {
+      throw new Error("Image generation failed");
+    };
 
     resultImg.src = imageUrl;
     resultPrompt.textContent = prompt;
-
-    loadingState.hidden = true;
-    imageResult.hidden = false;
 
   } catch (error) {
     loadingState.hidden = true;
